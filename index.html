@@ -140,6 +140,9 @@
             background: linear-gradient(to bottom, #1a1a1a, #0a0a0a);
             -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
             min-height: 0; /* Important for flex children to scroll */
+            position: relative;
+            z-index: 55; /* Above nav areas for scrolling */
+            pointer-events: auto;
         }
 
         .step-number {
@@ -196,11 +199,10 @@
         /* Navigation Areas */
         .nav-areas {
             position: absolute;
-            top: 30px;  /* Below progress bars */
+            top: 0;
             left: 0;
             right: 0;
-            height: 40vh; /* Only cover the image area for tapping */
-            max-height: 350px;
+            bottom: 0;
             display: flex;
             z-index: 50;
             pointer-events: none;
@@ -208,16 +210,23 @@
 
         .nav-area {
             flex: 1;
-            background: transparent;
-            border: none;
+            background: transparent !important;
+            border: none !important;
             cursor: pointer;
-            outline: none;
+            outline: none !important;
             pointer-events: all;
             -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            opacity: 0;
         }
 
-        .nav-area:active {
-            background: rgba(255, 255, 255, 0.05);
+        /* Remove any visual feedback */
+        .nav-area:active,
+        .nav-area:focus,
+        .nav-area:hover {
+            background: transparent;
+            outline: none;
         }
 
         /* Start Screen */
@@ -354,6 +363,7 @@
             font-size: 14px;
             animation: pulse 2s infinite;
             z-index: 60;
+            pointer-events: none; /* Don't block taps */
         }
 
         @keyframes pulse {
@@ -789,15 +799,11 @@
         let touchEndX = 0;
 
         document.addEventListener('touchstart', (e) => {
-            // Only capture touch on navigation areas, not on scrollable content
-            if (e.target.closest('.story-content')) return;
             touchStartX = e.changedTouches[0].screenX;
         });
 
         document.addEventListener('touchend', (e) => {
             if (!document.getElementById('startScreen').classList.contains('hidden')) return;
-            // Don't handle swipes on scrollable content
-            if (e.target.closest('.story-content')) return;
             
             touchEndX = e.changedTouches[0].screenX;
             handleSwipe();
