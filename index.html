@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sushi Stories - Learn to Make Sushi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #000;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+            user-select: none;
+        }
+
+        .app-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            max-width: 450px;
+            margin: 0 auto;
+            background: #000;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 8px;
+            z-index: 100;
+            display: flex;
+            gap: 4px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #fff;
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar.completed .progress-fill {
+            width: 100%;
+        }
+
+        .progress-bar.active .progress-fill {
+            width: 100%;
+            animation: fillProgress 5s linear;
+        }
+
+        /* Story Cards */
+        .story-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .story-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            background: #1a1a1a;
+            color: white;
+        }
+
+        .story-card.active {
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .story-image {
+            width: 100%;
+            height: 45%;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4em;
+            position: relative;
+        }
+
+        .story-content {
+            flex: 1;
+            padding: 30px 20px;
+            overflow-y: auto;
+            background: linear-gradient(to bottom, #1a1a1a, #0a0a0a);
+        }
+
+        .step-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .story-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .story-description {
+            font-size: 16px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 20px;
+        }
+
+        .ingredients-list, .tips-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .ingredients-list li, .tips-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .ingredients-list li:before {
+            content: "✓";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .tips-list li:before {
+            content: "💡";
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        /* Navigation Areas */
+        .nav-areas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            z-index: 50;
+        }
+
+        .nav-area {
+            flex: 1;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .nav-area:active {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Start Screen */
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 40px;
+            z-index: 200;
+        }
+
+        .start-screen.hidden {
+            display: none;
+        }
+
+        .app-logo {
+            font-size: 72px;
+            margin-bottom: 20px;
+        }
+
+        .app-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .app-subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .start-button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 16px 48px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .start-button:hover {
+            transform: scale(1.05);
+        }
+
+        .start-button:active {
+            transform: scale(0.98);
+        }
+
+        /* Timer */
+        .timer {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            margin: 10px 0;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 450px) {
+            .app-container {
+                max-width: 100%;
+            }
+        }
+
+        @media (min-height: 700px) {
+            .story-image {
+                height: 50%;
+            }
+        }
+
+        /* Swipe hint */
+        .swipe-hint {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            animation: pulse 2s infinite;
+            z-index: 60;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .final-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .final-card .story-title {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .restart-button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 14px 36px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: transform 0.2s;
+        }
+
+        .restart-button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Start Screen -->
+        <div class="start-screen" id="startScreen">
+            <div class="app-logo">🍣</div>
+            <h1 class="app-title">Sushi Stories</h1>
+            <p class="app-subtitle">Learn to make perfect sushi at home</p>
+            <button class="start-button" onclick="startStories()">Start Making Sushi</button>
+        </div>
+
+        <!-- Progress Bars -->
+        <div class="progress-container" id="progressContainer" style="display: none;">
+            <!-- Progress bars will be generated dynamically -->
+        </div>
+
+        <!-- Story Container -->
+        <div class="story-container" id="storyContainer">
+            <!-- Story 1: Introduction -->
+            <div class="story-card" data-index="0">
+                <div class="story-image">🍣</div>
+                <div class="story-content">
+                    <span class="step-number">Introduction</span>
+                    <h2 class="story-title">Welcome to Sushi Making!</h2>
+                    <p class="story-description">
+                        Today, we'll learn how to make delicious maki rolls (sushi rolls) at home. 
+                        It's easier than you think! We'll go through each step together, from preparing 
+                        the rice to rolling your first perfect sushi roll.
+                    </p>
+                    <p class="story-description">
+                        <strong>What we'll make:</strong> California Roll and Salmon Roll
+                    </p>
+                    <div class="timer">⏱️ Total time: 45 minutes</div>
+                </div>
+                <div class="swipe-hint">Tap right to continue →</div>
+            </div>
+
+            <!-- Story 2: Ingredients -->
+            <div class="story-card" data-index="1">
+                <div class="story-image">🛒</div>
+                <div class="story-content">
+                    <span class="step-number">Step 1</span>
+                    <h2 class="story-title">Gather Your Ingredients</h2>
+                    <p class="story-description">Let's make sure we have everything ready:</p>
+                    <ul class="ingredients-list">
+                        <li>2 cups sushi rice</li>
+                        <li>2½ cups water</li>
+                        <li>¼ cup rice vinegar</li>
+                        <li>2 tbsp sugar</li>
+                        <li>1 tsp salt</li>
+                        <li>4 nori sheets (seaweed)</li>
+                        <li>1 cucumber (julienned)</li>
+                        <li>1 avocado (sliced)</li>
+                        <li>200g sushi-grade salmon or crab sticks</li>
+                        <li>Sesame seeds (optional)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Story 3: Rice Preparation -->
+            <div class="story-card" data-index="2">
+                <div class="story-image">🍚</div>
+                <div class="story-content">
+                    <span class="step-number">Step 2</span>
+                    <h2 class="story-title">Prepare the Sushi Rice</h2>
+                    <p class="story-description">
+                        The rice is the foundation of great sushi. Here's how to make it perfect:
+                    </p>
+                    <ul class="tips-list">
+                        <li>Rinse rice until water runs clear (removes excess starch)</li>
+                        <li>Cook rice with 2½ cups water (1:1.25 ratio)</li>
+                        <li>Let it steam for 10 minutes after cooking</li>
+                        <li>Mix vinegar, sugar, and salt - heat until dissolved</li>
+                        <li>Fold vinegar mixture into rice gently while fanning</li>
+                    </ul>
+                    <div class="timer">⏱️ Rice cooking: 20 minutes</div>
+                </div>
+            </div>
+
+            <!-- Story 4: Prepare Fillings -->
+            <div class="story-card" data-index="3">
+                <div class="story-image">🥒</div>
+                <div class="story-content">
+                    <span class="step-number">Step 3</span>
+                    <h2 class="story-title">Prepare Your Fillings</h2>
+                    <p class="story-description">
+                        While the rice cools, let's prepare our fillings:
+                    </p>
+                    <ul class="tips-list">
+                        <li>Cut cucumber into long, thin strips (matchsticks)</li>
+                        <li>Slice avocado into ½ inch thick slices</li>
+                        <li>If using salmon, cut into long strips</li>
+                        <li>Keep everything cold and fresh</li>
+                        <li>Pat dry any wet ingredients with paper towels</li>
+                    </ul>
+                    <p class="story-description">
+                        <strong>Pro tip:</strong> Squeeze lemon on avocado to prevent browning!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Story 5: Set Up Station -->
+            <div class="story-card" data-index="4">
+                <div class="story-image">🎋</div>
+                <div class="story-content">
+                    <span class="step-number">Step 4</span>
+                    <h2 class="story-title">Set Up Your Rolling Station</h2>
+                    <p class="story-description">
+                        Organization is key to smooth sushi rolling:
+                    </p>
+                    <ul class="ingredients-list">
+                        <li>Bamboo rolling mat (makisu)</li>
+                        <li>Plastic wrap to cover the mat</li>
+                        <li>Bowl of water with rice vinegar (for hands)</li>
+                        <li>Sharp knife</li>
+                        <li>Clean cutting board</li>
+                        <li>Damp towel for cleaning</li>
+                    </ul>
+                    <p class="story-description">
+                        <strong>Important:</strong> Wrap your bamboo mat in plastic wrap to prevent sticking!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Story 6: Place Nori -->
+            <div class="story-card" data-index="5">
+                <div class="story-image">⬛</div>
+                <div class="story-content">
+                    <span class="step-number">Step 5</span>
+                    <h2 class="story-title">Place the Nori Sheet</h2>
+                    <p class="story-description">
+                        Time to start building your roll:
+                    </p>
+                    <ul class="tips-list">
+                        <li>Place nori shiny-side down on the mat</li>
+                        <li>The rough side should face up (holds rice better)</li>
+                        <li>Align the nori with the edge closest to you</li>
+                        <li>Keep extra nori sheets covered to prevent moisture</li>
+                    </ul>
+                    <p class="story-description">
+                        <strong>Tip:</strong> You can cut nori in half for smaller, thinner rolls!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Story 7: Spread Rice -->
+            <div class="story-card" data-index="6">
+                <div class="story-image">🤚</div>
+                <div class="story-content">
+                    <span class="step-number">Step 6</span>
+                    <h2 class="story-title">Spread the Rice</h2>
+                    <p class="story-description">
+                        This is the trickiest part - but you've got this!
+                    </p>
+                    <ul class="tips-list">
+                        <li>Wet your hands with vinegar water</li>
+                        <li>Take a handful of rice (about ¾ cup)</li>
+                        <li>Gently spread rice over nori</li>
+                        <li>Leave 1 inch bare at the top edge</li>
+                        <li>Don't press too hard - keep it fluffy!</li>
+                        <li>Aim for ¼ inch thick layer</li>
+                    </ul>
+                    <p class="story-description">
+                        <strong>Pro move:</strong> Sprinkle sesame seeds on the rice now!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Story 8: Add Fillings -->
+            <div class="story-card" data-index="7">
+                <div class="story-image">🥑</div>
+                <div class="story-content">
+                    <span class="step-number">Step 7</span>
+                    <h2 class="story-title">Add Your Fillings</h2>
+                    <p class="story-description">
+                        Now for the fun part - adding the delicious center!
+                    </p>
+                    <ul class="tips-list">
+                        <li>Place fillings in a line, 1 inch from bottom edge</li>
+                        <li>Don't overfill - less is more!</li>
+                        <li>Typical combo: 2-3 ingredients max</li>
+                        <li>California Roll: crab, avocado, cucumber</li>
+                        <li>Salmon Roll: salmon, avocado</li>
+                    </ul>
+                    <p class="story-description">
+                        <strong>Remember:</strong> The filling should be about thumb-width in total!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Story 9: Rolling -->
+            <div class="story-card" data-index="8">
+                <div class="story-image">🌀</div>
+                <div class="story-content">
+                    <span class="step-number">Step 8</span>
+                    <h2 class="story-title">Roll It Up!</h2>
+                    <p class="story-description">
+                        The moment of truth - let's roll:
+                    </p>
+                    <ul class="tips-list">
+                        <li>Lift the edge of mat closest to you</li>
+                        <li>Roll forward, tucking the edge under fillings</li>
+                        <li>Squeeze gently to compact</li>
+                        <li>Continue rolling, using mat to shape</li>
+                        <li>Wet the bare nori edge to seal</li>
+                        <li>Give final gentle squeeze to secure</li>
+                    </ul>
+                    <p class="story-description">
+                        <strong>Key:</strong> Roll with confidence but gentle pressure!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Story 10: Cutting -->
+            <div class="story-card" data-index="9">
+                <div class="story-image">🔪</div>
+                <div class="story-content">
+                    <span class="step-number">Step 9</span>
+                    <h2 class="story-title">Cut Your Roll</h2>
+                    <p class="story-description">
+                        The final step to beautiful sushi pieces:
+                    </p>
+                    <ul class="tips-list">
+                        <li>Wet your knife with vinegar water</li>
+                        <li>Cut roll in half first</li>
+                        <li>Cut each half into 3-4 pieces</li>
+                        <li>Clean knife between cuts</li>
+                        <li>Use gentle sawing motion, not pressure</li>
+                    </ul>
+                    <p class="story-description">
+                        <strong>Pro tip:</strong> A sharp knife is essential - dull knives will squish your roll!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Story 11: Presentation -->
+            <div class="story-card" data-index="10">
+                <div class="story-image">✨</div>
+                <div class="story-content">
+                    <span class="step-number">Step 10</span>
+                    <h2 class="story-title">Present Your Sushi</h2>
+                    <p class="story-description">
+                        Make it look as good as it tastes:
+                    </p>
+                    <ul class="tips-list">
+                        <li>Arrange pieces on a clean plate</li>
+                        <li>Stand pieces up to show the filling</li>
+                        <li>Add pickled ginger on the side</li>
+                        <li>Include wasabi and soy sauce</li>
+                        <li>Garnish with sesame seeds or scallions</li>
+                    </ul>
+                    <p class="story-description">
+                        <strong>Serving tip:</strong> Sushi tastes best at room temperature!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Story 12: Final -->
+            <div class="story-card final-card" data-index="11">
+                <div style="font-size: 72px; margin-bottom: 20px;">🎉</div>
+                <h2 class="story-title">Congratulations!</h2>
+                <p class="story-description" style="font-size: 20px; opacity: 0.95;">
+                    You've made your own sushi! 
+                </p>
+                <p class="story-description" style="font-size: 18px; opacity: 0.9; margin-top: 20px;">
+                    With practice, you'll be rolling like a pro. Remember, even imperfect rolls taste delicious!
+                </p>
+                <button class="restart-button" onclick="restartStories()">Make Another Roll</button>
+            </div>
+        </div>
+
+        <!-- Navigation Areas -->
+        <div class="nav-areas" id="navAreas" style="display: none;">
+            <button class="nav-area" onclick="previousStory()"></button>
+            <button class="nav-area" onclick="nextStory()"></button>
+        </div>
+    </div>
+
+    <script>
+        let currentStoryIndex = 0;
+        const stories = document.querySelectorAll('.story-card');
+        const totalStories = stories.length;
+        let autoProgressTimer = null;
+
+        function startStories() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('progressContainer').style.display = 'flex';
+            document.getElementById('navAreas').style.display = 'flex';
+            
+            // Generate progress bars
+            const progressContainer = document.getElementById('progressContainer');
+            progressContainer.innerHTML = '';
+            for (let i = 0; i < totalStories; i++) {
+                const progressBar = document.createElement('div');
+                progressBar.className = 'progress-bar';
+                progressBar.innerHTML = '<div class="progress-fill"></div>';
+                progressContainer.appendChild(progressBar);
+            }
+            
+            showStory(0);
+            startAutoProgress();
+        }
+
+        function showStory(index) {
+            // Hide all stories
+            stories.forEach(story => story.classList.remove('active'));
+            
+            // Show current story
+            if (index >= 0 && index < totalStories) {
+                stories[index].classList.add('active');
+                currentStoryIndex = index;
+                
+                // Update progress bars
+                const progressBars = document.querySelectorAll('.progress-bar');
+                progressBars.forEach((bar, i) => {
+                    bar.classList.remove('active', 'completed');
+                    if (i < index) {
+                        bar.classList.add('completed');
+                    } else if (i === index) {
+                        bar.classList.add('active');
+                    }
+                });
+                
+                // Hide swipe hint after first story
+                if (index > 0) {
+                    const hint = document.querySelector('.swipe-hint');
+                    if (hint) hint.style.display = 'none';
+                }
+            }
+        }
+
+        function nextStory() {
+            if (currentStoryIndex < totalStories - 1) {
+                showStory(currentStoryIndex + 1);
+                resetAutoProgress();
+            }
+        }
+
+        function previousStory() {
+            if (currentStoryIndex > 0) {
+                showStory(currentStoryIndex - 1);
+                resetAutoProgress();
+            }
+        }
+
+        function restartStories() {
+            currentStoryIndex = 0;
+            showStory(0);
+            resetAutoProgress();
+        }
+
+        function startAutoProgress() {
+            autoProgressTimer = setTimeout(() => {
+                nextStory();
+                if (currentStoryIndex < totalStories - 1) {
+                    startAutoProgress();
+                }
+            }, 5000);
+        }
+
+        function resetAutoProgress() {
+            clearTimeout(autoProgressTimer);
+            startAutoProgress();
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('startScreen').classList.contains('hidden')) {
+                if (e.key === 'ArrowRight') nextStory();
+                if (e.key === 'ArrowLeft') previousStory();
+            }
+        });
+
+        // Touch/swipe support
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            if (!document.getElementById('startScreen').classList.contains('hidden')) return;
+            
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) nextStory();
+            if (touchEndX > touchStartX + 50) previousStory();
+        }
+    </script>
+</body>
+</html>
